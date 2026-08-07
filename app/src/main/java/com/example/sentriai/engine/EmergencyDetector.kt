@@ -30,7 +30,23 @@ data class EmergencyDecision(
     val source: Source,
 ) {
     /** Which detector fired, for the trigger log and for debugging false positives. */
-    enum class Source { PHRASE_TRIGGER, EXPLICIT_PLEA, CLASSIFIER }
+    enum class Source {
+        PHRASE_TRIGGER,
+        EXPLICIT_PLEA,
+        CLASSIFIER,
+
+        /** Distress heard during a live Agora conversation — see `ConversationDistress`. */
+        CONVERSATION,
+
+        /** The agent's own structured `[[SENTRI_ALERT:…]]` signal during a live conversation. */
+        AGENT_SIGNAL,
+
+        /** A live conversation went quiet immediately after a distress cue. */
+        SILENCE_AFTER_DISTRESS,
+
+        /** The user pressed the SOS button. No detector was involved. */
+        MANUAL_SOS,
+    }
 }
 
 /**

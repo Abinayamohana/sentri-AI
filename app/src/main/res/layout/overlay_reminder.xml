@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  The reminder overlay.
+
+  A bottom strip, not a full-screen window. The window this inflates into is match_parent wide
+  and wrap_content tall, anchored to the bottom, so everything above the card keeps receiving
+  touches and the app underneath stays usable while the reminder is up.
+
+  Views rather than Compose, even though the rest of the app is Compose: this is added straight to
+  the WindowManager by a Service, which has no lifecycle or saved-state owner to host a
+  ComposeView, and the entrance is a translation along a Path — the thing ObjectAnimator does in
+  one call.
+
+  The card is first in the layout and the character last, so the character rests at the
+  bottom-right corner it walks in from.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/reminder_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:gravity="bottom"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="18dp">
+
+    <LinearLayout
+        android:id="@+id/reminder_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_reminder_card"
+        android:elevation="10dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="14dp">
+
+        <TextView
+            android:id="@+id/reminder_heading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.08"
+            android:textAllCaps="true"
+            android:textColor="@color/reminder_accent"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:text="@string/reminder_heading_medicine" />
+
+        <!--
+          Filled at runtime, one child per item due at this minute. Two things due at 8:00 AM are
+          two rows on one card with one Stop and one Snooze — not two overlays to dismiss.
+        -->
+        <LinearLayout
+            android:id="@+id/reminder_items"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="vertical" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/reminder_snooze"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_reminder_snooze"
+                android:gravity="center"
+                android:minHeight="48dp"
+                android:paddingStart="12dp"
+                android:paddingTop="13dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="13dp"
+                android:textColor="@color/reminder_accent"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="10dp"
+                android:layout_height="1dp" />
+
+            <TextView
+                android:id="@+id/reminder_stop"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_reminder_stop"
+                android:gravity="center"
+                android:minHeight="48dp"
+                android:paddingStart="12dp"
+                android:paddingTop="13dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="13dp"
+                android:text="@string/reminder_stop"
+                android:textColor="@color/reminder_on_accent"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!--
+      Decorative. The card carries every word of the reminder, so announcing the character would
+      only add noise between the heading and the dose.
+
+      No android:src: ReminderCharacter picks the image by scenario and, critically, decodes it
+      down to this slot's size. Left to the platform, the unqualified 1024x1024 source is upscaled
+      to device density — tens of megabytes for a 96dp view. These two dimensions are the size it
+      samples to, read straight off the layout params.
+    -->
+    <ImageView
+        android:id="@+id/reminder_character"
+        android:layout_width="120dp"
+        android:layout_height="160dp"
+        android:layout_marginStart="2dp"
+        android:adjustViewBounds="true"
+        android:importantForAccessibility="no"
+        android:scaleType="fitEnd" />
+</LinearLayout>

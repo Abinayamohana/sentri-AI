@@ -23,3 +23,18 @@ internal val PowerOnGreen = Color(0xFF15803D)
 /** Destructive/attention accents: the stop pill and error copy. */
 internal val StopRed = Color(0xFFDC2626)
 internal val ErrorRed = Color(0xFFB91C1C)
+
+/**
+ * Emergency screen. Held apart from the Guardian blues on purpose: the SOS surface should not
+ * look like the rest of the app, so a frightened person can find it without reading anything.
+ */
+internal val SosRed = Color(0xFFD32029)
+internal val SosRedPressed = Color(0xFF9F1218)
+internal val SosHalo = Color(0xFFFBE3E4)
+internal val EmergencyBackground = Color(0xFFFFF7F7)
+
+/** Daily Companion accents: taken doses, meal rows, food-relation chips. */
+internal val CalmGreen = Color(0xFF15803D)
+internal val CalmGreenContainer = Color(0xFFE7F6EC)
+internal val WarmAmber = Color(0xFFB45309)
+internal val WarmAmberContainer = Color(0xFFFEF3C7)

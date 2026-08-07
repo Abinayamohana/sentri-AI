@@ -94,4 +94,127 @@
     <string name="listening_error_mic">Mic error: %1$s</string>
     <string name="listening_error_model">Model load failed</string>
     <string name="listening_notification_permission_denied">Without notification access the listening status bar entry is hidden, but listening still works.</string>
+
+    <!-- Home entry points into the two care screens. -->
+    <string name="home_emergency_entry">Emergency</string>
+    <string name="home_emergency_entry_detail">Get help now</string>
+    <string name="home_companion_entry">Daily Companion</string>
+    <string name="home_companion_entry_detail">Check-in &amp; medicines</string>
+
+    <!-- Emergency screen. -->
+    <string name="emergency_title">Emergency</string>
+    <string name="emergency_sos">SOS</string>
+    <string name="emergency_sos_caption">Press for help</string>
+    <string name="emergency_sos_hint">Pressing SOS alerts %1$s straight away. You will not be asked to confirm.</string>
+    <string name="emergency_sent_title">Help has been called</string>
+    <string name="emergency_sent_body">%1$s has been alerted. Stay where you are — Sentri is staying with you.</string>
+    <string name="emergency_call_family">Call family</string>
+    <string name="emergency_test_alert">Send test alert</string>
+    <string name="emergency_test_sent">Test alert sent to %1$s</string>
+    <string name="emergency_recent_alerts">Recent alerts</string>
+    <string name="emergency_no_contact">No emergency contact saved. Add one in your profile first.</string>
+
+    <!-- Daily Companion screen. -->
+    <string name="companion_title">Daily Companion</string>
+    <string name="companion_start_checkin">Start daily check-in</string>
+    <string name="companion_start_checkin_detail">A short call about how you are and your medicines</string>
+    <string name="companion_start_companion">Start companion call</string>
+    <string name="companion_start_companion_detail">Talk about the day, the news, stories or bhajans</string>
+    <string name="companion_medicines_title">Today\'s medicines</string>
+    <string name="companion_meals_title">Today\'s meal times</string>
+    <string name="companion_no_medicines">No medicines yet. Add each dose with its time and whether it is taken before, after or with food.</string>
+    <string name="companion_edit">Edit</string>
+    <string name="companion_add_medicine">Add medicine</string>
+    <string name="companion_setup_prompt">Set the meal times and the medicine times. Everything the companion says on a call comes from these two lists.</string>
+
+    <!-- Meal-time and medicine editors: the only two things anyone types in. -->
+    <string name="care_edit_meals_title">Meal times</string>
+    <string name="care_edit_meals_hint">Used for reminders and to work out when a before/after-food dose is due.</string>
+    <string name="care_meal_breakfast">Breakfast</string>
+    <string name="care_meal_lunch">Lunch</string>
+    <string name="care_meal_dinner">Dinner</string>
+    <string name="care_meal_snack">Snack</string>
+    <string name="care_meal_bedtime">Bedtime</string>
+    <string name="care_meal_none">No meal</string>
+    <string name="care_optional_section">OPTIONAL</string>
+    <string name="care_add_time">Add time</string>
+    <string name="care_clear">Clear</string>
+    <string name="care_save">Save</string>
+
+    <string name="care_add_medicine">Add medicine</string>
+    <string name="care_edit_medicine">Edit medicine</string>
+    <string name="care_field_name">Medicine name</string>
+    <string name="care_field_dosage">Dosage</string>
+    <string name="care_field_dosage_hint">e.g. 500 mg, 1 tablet</string>
+    <string name="care_field_food_relation">FOOD</string>
+    <string name="care_field_meal">WITH WHICH MEAL</string>
+    <string name="care_field_time">Time</string>
+    <string name="care_field_frequency">HOW OFTEN</string>
+    <string name="care_field_notes">Notes (optional)</string>
+    <string name="care_time_from_meal">Following the meal time — tap to set your own</string>
+    <string name="care_one_entry_per_dose">Add one entry per dose. A medicine taken twice a day is two entries, so the check-in call can ask about each one.</string>
+    <string name="care_relation_before">Before food</string>
+    <string name="care_relation_after">After food</string>
+    <string name="care_relation_with">With food</string>
+    <string name="care_relation_none">Any time</string>
+    <string name="care_delete_medicine">Delete</string>
+    <string name="care_delete_confirm_title">Delete %1$s?</string>
+    <string name="care_delete_confirm_body">This removes it from the schedule and from what the companion asks about.</string>
+    <string name="companion_mark_taken">Mark taken</string>
+    <string name="companion_taken">Taken</string>
+    <string name="companion_unavailable">Voice calling is not set up: %1$s</string>
+
+    <!-- Live conversational call. -->
+    <string name="call_title">Sentri</string>
+    <string name="call_connecting">Connecting…</string>
+    <string name="call_live">Connected</string>
+    <string name="call_agent_joining">Waking your companion…</string>
+    <string name="call_ending">Ending…</string>
+    <string name="call_end">End call</string>
+    <string name="call_mute">Mute</string>
+    <string name="call_unmute">Unmute</string>
+    <string name="call_speaker_you">You</string>
+    <string name="call_speaker_agent">Sentri</string>
+    <string name="call_transcript_empty">Say hello whenever you\'re ready.</string>
+    <string name="call_emergency_banner">Emergency alert sent — %1$s has been notified</string>
+    <string name="call_failed">Call failed: %1$s</string>
+
+    <!--
+      Medicine and meal reminders. The overlay's chrome is here; the words that name a drug, a
+      dosage or a food rule come from CareBriefing, so the reminder cannot describe a dose
+      differently from the companion screen.
+    -->
+    <string name="reminder_heading_medicine">Medicine</string>
+    <string name="reminder_heading_meal">Meal</string>
+    <string name="reminder_heading_mixed">Reminder</string>
+    <!-- e.g. "MEDICINE · 8:00 AM" -->
+    <string name="reminder_heading_format">%1$s · %2$s</string>
+    <string name="reminder_stop">Stop</string>
+    <!-- %1$d is the snooze length in minutes. -->
+    <string name="reminder_snooze">Snooze %1$d min</string>
+
+    <string name="reminder_service_channel_name">Showing a reminder</string>
+    <string name="reminder_service_channel_description">Runs for a few moments while a medicine or meal reminder is on screen.</string>
+    <string name="reminder_service_notification_title">Reminder on screen</string>
+    <string name="reminder_alert_channel_name">Medicine and meal reminders</string>
+    <string name="reminder_alert_channel_description">Reminders for the times in your schedule, when they cannot be shown on screen.</string>
+
+    <!-- The setup card on the Daily Companion screen. -->
+    <string name="reminder_setup_title">Reminders</string>
+    <string name="reminder_setup_enabled">On — you\'ll be reminded at every time above</string>
+    <string name="reminder_setup_disabled">Off — no reminders for the times above</string>
+    <string name="reminder_setup_permissions_title">Two more taps and reminders will work</string>
+    <string name="reminder_setup_permissions_body">Android asks for each of these on its own settings screen. Without them a reminder either can\'t appear on top of what you\'re doing, or arrives late.</string>
+    <string name="reminder_permission_overlay">Display over other apps</string>
+    <string name="reminder_permission_overlay_detail">Lets the reminder appear over whatever is on screen.</string>
+    <string name="reminder_permission_alarms">Alarms &amp; reminders</string>
+    <string name="reminder_permission_alarms_detail">Lets a reminder arrive at its exact time instead of whenever Android gets round to it.</string>
+    <string name="reminder_permission_notifications">Notifications</string>
+    <string name="reminder_permission_notifications_detail">Where a reminder goes when the screen is locked.</string>
+    <string name="reminder_permission_granted">Allowed</string>
+    <string name="reminder_permission_grant">Allow</string>
+    <string name="reminder_preview">Try it now</string>
+    <string name="reminder_preview_detail">Shows your next reminder straight away, the way it will really appear. Changes nothing.</string>
+    <string name="reminder_battery_hint">Reminders not arriving? Some phones stop background apps on their own. Allowing background activity for Sentri AI fixes it.</string>
+    <string name="reminder_battery_action">Open battery settings</string>
 </resources>

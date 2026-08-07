@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  One thing due, inside the reminder card.
+
+  The detail line (dosage and food rule) is a sibling of the title rather than appended to it, so
+  it stays legible at its own size and never wraps into the drug name. It is hidden only when
+  there is nothing to say — a dose with no dosage and no food instruction.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
+
+    <TextView
+        android:id="@+id/item_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/reminder_ink"
+        android:textSize="19sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/item_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:textColor="@color/reminder_muted"
+        android:textSize="14sp" />
+</LinearLayout>

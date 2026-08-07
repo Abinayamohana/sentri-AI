@@ -16,6 +16,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,11 +42,18 @@ import com.example.sentriai.models.ModelAsset
 @Composable
 fun HuggingFaceDownloadCard(
     modifier: Modifier = Modifier,
+    onDownloadDone: () -> Unit = {},
     viewModel: HuggingFaceDownloadViewModel = viewModel(),
 ) {
     if (!BuildConfig.DEBUG) return
 
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(state) {
+        if (state is HuggingFaceDownloadViewModel.State.Done) {
+            onDownloadDone()
+        }
+    }
 
     // Recomputed per composition rather than held in state: a finished download changes what
     // is on disk, and this is the cheap filesystem check that notices.
@@ -83,7 +91,7 @@ fun HuggingFaceDownloadCard(
                 }
 
                 is HuggingFaceDownloadViewModel.State.Done -> Text(
-                    text = "Downloaded. Restart the app to load it.",
+                    text = "Downloaded. Loading model into engine...",
                     color = NavyInk,
                     fontSize = 13.sp,
                 )

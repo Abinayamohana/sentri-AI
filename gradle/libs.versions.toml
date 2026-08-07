@@ -3,6 +3,8 @@ agp = "9.2.1"
 kotlin = "2.2.10"
 coreKtx = "1.19.0"
 junit = "4.13.2"
+coroutinesTest = "1.9.0"
+orgJson = "20250107"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 appcompat = "1.6.1"
@@ -12,10 +14,20 @@ activityCompose = "1.9.3"
 navigationCompose = "2.8.4"
 lifecycle = "2.8.7"
 executorch = "1.3.1"
+# Conversational AI Engine needs 4.5.1+ — that is the release that added
+# AUDIO_SCENARIO_AI_CLIENT, the audio profile tuned for talking to a TTS agent.
+agoraRtc = "4.6.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+# runTest's virtual clock, so the escalation silence watchdog is testable without real waiting.
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+# Test-only. `org.json` ships inside android.jar, but as a stub that returns default values under
+# isReturnDefaultValues — so the real implementation has to be on the unit-test classpath for
+# anything that parses JSON to be testable off-device. Not an app dependency: the app uses the
+# platform's own copy.
+org-json = { group = "org.json", name = "json", version.ref = "orgJson" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
@@ -35,6 +47,11 @@ androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lif
 
 # On-device inference runtime
 pytorch-executorch-android = { group = "org.pytorch", name = "executorch-android", version.ref = "executorch" }
+
+# Agora RTC, audio only. `voice-sdk` rather than `full-sdk`: the companion call carries no
+# video, and full-sdk drags in the video codecs, virtual background and face capture AARs for
+# nothing. Data streams — how the Conversational AI agent delivers transcripts — are in both.
+agora-rtc-voice = { group = "io.agora.rtc", name = "voice-sdk", version.ref = "agoraRtc" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

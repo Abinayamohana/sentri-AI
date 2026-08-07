@@ -13,6 +13,10 @@ import com.example.sentriai.data.ProfileStore
 import com.example.sentriai.model_inference.speech_to_text.TranscriptionViewModel
 import com.example.sentriai.ui.screens.AiAssistantActivateScreen
 import com.example.sentriai.ui.screens.AlertHistoryScreen
+import com.example.sentriai.ui.screens.CompanionCallScreen
+import com.example.sentriai.ui.screens.CompanionCallViewModel
+import com.example.sentriai.ui.screens.DailyCompanionScreen
+import com.example.sentriai.ui.screens.EmergencyScreen
 import com.example.sentriai.ui.screens.ProfileSettingsScreen
 import com.example.sentriai.ui.screens.TriggerLogViewModel
 import com.example.sentriai.ui.screens.VoiceTranscriptScreen
@@ -23,6 +27,15 @@ object Routes {
     const val AI_ASSISTANT = "ai_assistant"
     const val VOICE_TRANSCRIPT = "voice_transcript"
     const val ALERT_HISTORY = "alert_history"
+
+    /** SOS surface. Kept as its own destination, with nothing else on it. */
+    const val EMERGENCY = "emergency"
+
+    /** Schedule + call launcher. */
+    const val DAILY_COMPANION = "daily_companion"
+
+    /** The live Agora conversation, pushed on top of whichever screen started it. */
+    const val COMPANION_CALL = "companion_call"
 }
 
 /**
@@ -44,6 +57,11 @@ fun SentriAiNavHost(
     // Hoisted so the home badge, transcript screen inline log, and alert history page
     // all share the same log state.
     val triggerLogViewModel: TriggerLogViewModel = viewModel()
+    // Hoisted for a stronger reason than the others: this owns the Agora RTC engine, the live
+    // call and — critically — the escalation latch. Scoped to a back stack entry it would be
+    // destroyed on navigation, taking a call and an in-flight escalation with it, and the three
+    // care screens would each see a different call.
+    val companionCallViewModel: CompanionCallViewModel = viewModel()
     // Resolved once per host: NavHost only reads startDestination when it builds the
     // graph, and re-reading prefs on recomposition would have no effect anyway.
     val startDestination = remember {
@@ -76,6 +94,12 @@ fun SentriAiNavHost(
                 onAlertHistoryClick = {
                     navController.navigate(Routes.ALERT_HISTORY) { launchSingleTop = true }
                 },
+                onEmergencyClick = {
+                    navController.navigate(Routes.EMERGENCY) { launchSingleTop = true }
+                },
+                onDailyCompanionClick = {
+                    navController.navigate(Routes.DAILY_COMPANION) { launchSingleTop = true }
+                },
                 viewModel = transcriptionViewModel,
                 triggerLogViewModel = triggerLogViewModel,
             )
@@ -97,6 +121,47 @@ fun SentriAiNavHost(
                 onBack = { navController.popBackStack() },
                 onProfileClick = { navController.navigate(Routes.PROFILE) },
                 triggerLogViewModel = triggerLogViewModel,
+            )
+        }
+
+        composable(Routes.EMERGENCY) {
+            EmergencyScreen(
+                onBack = { navController.popBackStack() },
+                onViewAlertHistory = {
+                    // Refreshed first so an alert raised seconds ago by the SOS button is
+                    // already in the list when the page opens.
+                    triggerLogViewModel.refresh()
+                    navController.navigate(Routes.ALERT_HISTORY) { launchSingleTop = true }
+                },
+                onCallStarted = {
+                    navController.navigate(Routes.COMPANION_CALL) { launchSingleTop = true }
+                },
+                viewModel = companionCallViewModel,
+            )
+        }
+
+        composable(Routes.DAILY_COMPANION) {
+            DailyCompanionScreen(
+                onBack = { navController.popBackStack() },
+                onCallStarted = {
+                    navController.navigate(Routes.COMPANION_CALL) { launchSingleTop = true }
+                },
+                viewModel = companionCallViewModel,
+            )
+        }
+
+        composable(Routes.COMPANION_CALL) {
+            CompanionCallScreen(
+                // Popping rather than navigating: the call screen sits on top of whichever
+                // screen started the call, so ending one returns there.
+                onCallFinished = {
+                    if (navController.currentDestination?.route == Routes.COMPANION_CALL) {
+                        navController.popBackStack()
+                    }
+                    // An emergency raised during the call is now in the log.
+                    triggerLogViewModel.refresh()
+                },
+                viewModel = companionCallViewModel,
             )
         }
     }

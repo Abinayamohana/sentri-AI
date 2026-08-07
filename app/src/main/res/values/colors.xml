@@ -16,4 +16,21 @@
     <!-- Standard colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!--
+      Reminder overlay. Duplicated from GuardianPalette.kt rather than shared, because the overlay
+      is Views inflated by a Service and Compose colours are not reachable from a layout file.
+      Keep the two in step: the overlay lands on top of the app and a palette drift shows.
+
+      Light-only, matching the Compose palette's own note — the app forces MODE_NIGHT_NO.
+    -->
+    <color name="reminder_card">#FFFFFFFF</color>
+    <color name="reminder_card_border">#FFEDF1F9</color>
+    <color name="reminder_ink">#FF111A32</color>
+    <color name="reminder_muted">#FF64748B</color>
+    <color name="reminder_accent">#FF2563EB</color>
+    <color name="reminder_accent_pressed">#FF1D4FD1</color>
+    <color name="reminder_accent_container">#FFE9F0FE</color>
+    <color name="reminder_accent_container_pressed">#FFD6E3FC</color>
+    <color name="reminder_on_accent">#FFFFFFFF</color>
 </resources>

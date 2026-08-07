@@ -50,6 +50,30 @@ val modelBaseUrl: String = when {
     }
 }
 
+// --- Agora Conversational AI ------------------------------------------------------------
+//
+// Three separate things, deliberately kept apart because they have very different blast radii:
+//
+// 1. `agoraAppId` — public by design. It identifies the project and has to be in the client to
+//    create an RtcEngine at all. Safe in any build.
+// 2. `agoraBackendUrl` — your own service. It mints RTC tokens and starts the conversational
+//    agent, holding the App Certificate and the Customer ID/Secret so the app never does.
+//    This is the supported production path; see AgoraSessionRepository for the two endpoints.
+// 3. `agoraCustomerId` / `agoraCustomerSecret` — Agora RESTful API credentials. These can start
+//    an agent on your account and bill it, so they are wired into the **debug** build only, as
+//    a way to exercise the flow before the backend exists. Never set them for a release build.
+val agoraAppId: String = setting("agoraAppId", "AGORA_APP_ID")
+val agoraBackendUrl: String = setting("agoraBackendUrl", "AGORA_BACKEND_URL")
+// The published Agent Studio agent to base each call on — Console → Agents → your agent →
+// Embed Agent. Optional; without it the app sends its own ASR/LLM/TTS vendor configuration.
+val agoraPipelineId: String = setting("agoraPipelineId", "AGORA_PIPELINE_ID")
+// "gemini" when the agent's LLM is Gemini or Vertex AI, otherwise leave unset. This selects the
+// shape of the system-prompt payload, which the two families spell differently — see
+// AgoraConfig.LLM_STYLE for why getting it wrong fails silently.
+val agoraLlmStyle: String = setting("agoraLlmStyle", "AGORA_LLM_STYLE")
+val agoraCustomerId: String = setting("agoraCustomerId", "AGORA_CUSTOMER_ID")
+val agoraCustomerSecret: String = setting("agoraCustomerSecret", "AGORA_CUSTOMER_SECRET")
+
 android {
     namespace = "com.example.sentriai"
     compileSdk = 37
@@ -72,6 +96,14 @@ android {
         // Empty here so release builds never carry a token; the debug variant below overrides
         // it with whatever local.properties holds.
         buildConfigField("String", "HF_TOKEN", "\"\"")
+
+        buildConfigField("String", "AGORA_APP_ID", "\"$agoraAppId\"")
+        buildConfigField("String", "AGORA_BACKEND_URL", "\"$agoraBackendUrl\"")
+        buildConfigField("String", "AGORA_PIPELINE_ID", "\"$agoraPipelineId\"")
+        buildConfigField("String", "AGORA_LLM_STYLE", "\"$agoraLlmStyle\"")
+        // Empty in every variant except debug — see the block below and the comment above.
+        buildConfigField("String", "AGORA_CUSTOMER_ID", "\"\"")
+        buildConfigField("String", "AGORA_CUSTOMER_SECRET", "\"\"")
 
         ndk {
             // The ExecuTorch AAR only ships libexecutorch.so for these two ABIs. Without the
@@ -96,6 +128,13 @@ android {
             // The token only reaches the debug APK, and the button that uses it is compiled
             // behind BuildConfig.DEBUG.
             buildConfigField("String", "HF_TOKEN", "\"$huggingFaceToken\"")
+
+            // Lets a developer start a real conversational agent without standing the backend
+            // up first. AgoraSessionRepository additionally refuses to use these unless
+            // BuildConfig.DEBUG, so a stray gradle.properties entry cannot leak them into a
+            // shipped build.
+            buildConfigField("String", "AGORA_CUSTOMER_ID", "\"$agoraCustomerId\"")
+            buildConfigField("String", "AGORA_CUSTOMER_SECRET", "\"$agoraCustomerSecret\"")
         }
         release {
             isMinifyEnabled = false
@@ -146,7 +185,28 @@ dependencies {
     // transitively — nothing else to declare here.
     implementation(libs.pytorch.executorch.android)
 
+    // Live voice for the companion/check-in call. Only the Agora layer touches this; the
+    // passive on-device path does not know it exists.
+    //
+    // `voice-sdk` is an aggregator POM over the core plus every audio extension. Three of those
+    // are for use cases this app does not have and cost ~14 MB of .so per ABI, so they are
+    // excluded. What is kept is deliberate:
+    //   - voice-rtc-basic: the SDK itself.
+    //   - ains  (AI noise suppression) and aiaec (AI echo cancellation): both matter here. The
+    //     phone is on speakerphone in a room, so the agent's own TTS is coming back down the
+    //     mic; AUDIO_SCENARIO_AI_CLIENT expects these to be present to handle that well.
+    implementation(libs.agora.rtc.voice) {
+        // Lip sync — needs a video avatar, which this call does not have.
+        exclude(group = "io.agora.rtc", module = "full-voice-drive")
+        // 3D positional audio for one remote speaker on a phone speaker.
+        exclude(group = "io.agora.rtc", module = "spatial-audio")
+        // Voice changer / reverb effects.
+        exclude(group = "io.agora.rtc", module = "audio-beauty")
+    }
+
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.org.json)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 }

@@ -87,6 +87,34 @@ object EmergencyPipeline {
                 return@withContext false
             }
 
+            dispatch(context, decision, transcript)
+        }
+
+    /**
+     * Stage 2 on its own: act on a decision that has already been made.
+     *
+     * [processTranscript] is stage 1 followed by this. Callers that reached a decision some
+     * other way — the SOS button, or distress heard during a live Agora conversation — come
+     * straight here, because re-running the detector on their behalf could only produce one new
+     * outcome: a NO that discards an emergency somebody has already established. The detector
+     * is tuned for unprompted speech in an empty room and answers NO to a bare "Help"; letting
+     * it re-litigate a pressed SOS button would be a bug with a body count.
+     *
+     * Everything downstream — the tool-call formatting, the SMS, the trigger log — is the same
+     * code the passive path runs, so an alert raised in a conversation is indistinguishable
+     * from one raised by the on-device pipeline by the time it reaches the caregiver.
+     *
+     * @param transcript the surrounding context recorded in the log. May be longer than
+     *   [EmergencyDecision.triggerPhrase] — for a conversation it is the whole exchange.
+     * @return true, always: the alert attempt happened. SMS success is recorded in the log,
+     *   not returned, because a failed send is still an event the caregiver must be able to see.
+     */
+    suspend fun dispatch(
+        context: Context,
+        decision: EmergencyDecision,
+        transcript: String = decision.triggerPhrase,
+    ): Boolean =
+        withContext(Dispatchers.Default) {
             val alert = if (toolCallStageEnabled) {
                 FunctionGemmaEngine.buildAlertCall(decision, transcript)
             } else {

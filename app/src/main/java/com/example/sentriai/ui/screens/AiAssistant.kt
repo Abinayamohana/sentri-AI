@@ -77,6 +77,12 @@ import com.example.sentriai.R
 import com.example.sentriai.model_inference.speech_to_text.TranscriptionUiState
 import com.example.sentriai.model_inference.speech_to_text.TranscriptionViewModel
 import com.example.sentriai.ui.theme.SentriAITheme
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 
 /**
  * Guardian AI activation screen, wired to on-device speech-to-text.
@@ -95,6 +101,8 @@ fun AiAssistantActivateScreen(
     onProfileClick: () -> Unit,
     onTranscriptionStarted: () -> Unit,
     onAlertHistoryClick: () -> Unit,
+    onEmergencyClick: () -> Unit,
+    onDailyCompanionClick: () -> Unit,
     viewModel: TranscriptionViewModel,
     modifier: Modifier = Modifier,
     triggerLogViewModel: TriggerLogViewModel = viewModel(),
@@ -180,6 +188,9 @@ fun AiAssistantActivateScreen(
         },
         engineState = engineState,
         engineErrorMessage = engineErrorMessage,
+        onEmergencyClick = onEmergencyClick,
+        onDailyCompanionClick = onDailyCompanionClick,
+        onDownloadDone = { triggerLogViewModel.initEngine() },
         modifier = modifier,
     )
 }
@@ -212,6 +223,9 @@ private fun AiAssistantActivateContent(
     onLogClick: () -> Unit,
     engineState: EngineState,
     engineErrorMessage: String?,
+    onEmergencyClick: () -> Unit,
+    onDailyCompanionClick: () -> Unit,
+    onDownloadDone: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val isActive = state is TranscriptionUiState.Listening
@@ -222,7 +236,14 @@ private fun AiAssistantActivateContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(PageBackground)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFE8EFFF),
+                        PageBackground
+                    )
+                )
+            )
             .windowInsetsPadding(WindowInsets.systemBars),
     ) {
         GuardianTopBar(
@@ -240,7 +261,7 @@ private fun AiAssistantActivateContent(
         ) {
             Spacer(Modifier.height(24.dp))
 
-            AssistantPortrait()
+            AssistantPortrait(isActive = isActive)
 
             Spacer(Modifier.height(28.dp))
 
@@ -285,38 +306,37 @@ private fun AiAssistantActivateContent(
 
             Spacer(Modifier.height(16.dp))
 
-            Text(
-                text = stringResource(R.string.ai_assistant_protocol).uppercase(),
-                color = MutedText,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 1.4.sp,
-            )
-
-            Spacer(Modifier.height(6.dp))
-
             EngineStatusBadge(engineState = engineState, errorMessage = engineErrorMessage)
 
             // Sits directly under the badge on purpose: the badge is what tells you a model is
             // missing, so the way to fetch it belongs next to it. Debug builds only.
-            HuggingFaceDownloadCard(modifier = Modifier.padding(top = 12.dp))
+            HuggingFaceDownloadCard(
+                modifier = Modifier.padding(top = 12.dp),
+                onDownloadDone = onDownloadDone
+            )
 
             Spacer(Modifier.height(16.dp))
 
+            // The two care surfaces. Only entry points live here — everything about them is on
+            // their own screens, so the passive monitoring flow above is unchanged.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                StatusTile(
-                    icon = R.drawable.ic_location_pin,
-                    label = R.string.ai_assistant_location_label,
-                    value = R.string.ai_assistant_location_value,
+                CareEntryTile(
+                    title = stringResource(R.string.home_emergency_entry),
+                    detail = stringResource(R.string.home_emergency_entry_detail),
+                    accent = SosRed,
+                    container = SosHalo,
+                    onClick = onEmergencyClick,
                     modifier = Modifier.weight(1f),
                 )
-                StatusTile(
-                    icon = R.drawable.ic_shield,
-                    label = R.string.ai_assistant_vitals_label,
-                    value = R.string.ai_assistant_vitals_value,
+                CareEntryTile(
+                    title = stringResource(R.string.home_companion_entry),
+                    detail = stringResource(R.string.home_companion_entry_detail),
+                    accent = AccentBlue,
+                    container = SoftBlueContainer,
+                    onClick = onDailyCompanionClick,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -336,6 +356,79 @@ private fun AiAssistantActivateContent(
 
             Spacer(Modifier.height(24.dp))
         }
+    }
+}
+
+/**
+ * Entry tile into one of the care screens.
+ *
+ * Kept visually quiet: these are doors, and the Emergency screen behind the red one has the
+ * actual SOS button on it. A second full-size SOS control on the home screen would be two
+ * places to press with different behaviour.
+ */
+@Composable
+private fun CareEntryTile(
+    title: String,
+    detail: String,
+    accent: Color,
+    container: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "tile_press"
+    )
+
+    Column(
+        modifier = modifier
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .shadow(
+                elevation = if (isPressed) 2.dp else 6.dp,
+                shape = RoundedCornerShape(20.dp),
+                clip = false
+            )
+            .clip(RoundedCornerShape(20.dp))
+            .background(CardBackground)
+            .border(width = 1.dp, color = CardBorder, shape = RoundedCornerShape(20.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(16.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(container),
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = accent.copy(alpha = 0.6f),
+                modifier = Modifier.size(16.dp)
+            )
+        }
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = title,
+            color = accent,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = (-0.3).sp
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(text = detail, color = MutedText, fontSize = 12.sp, lineHeight = 16.sp)
     }
 }
 
@@ -367,10 +460,18 @@ private fun GuardianTopBar(
     logBadgeCount: Int = 0,
     onLogClick: () -> Unit = {},
 ) {
+    val logInteraction = remember { MutableInteractionSource() }
+    val logPressed by logInteraction.collectIsPressedAsState()
+    val logScale by animateFloatAsState(if (logPressed) 0.88f else 1f, label = "log_press")
+
+    val profileInteraction = remember { MutableInteractionSource() }
+    val profilePressed by profileInteraction.collectIsPressedAsState()
+    val profileScale by animateFloatAsState(if (profilePressed) 0.88f else 1f, label = "profile_press")
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TopBarBackground)
+            .background(Color.Transparent)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -393,10 +494,15 @@ private fun GuardianTopBar(
         Box(contentAlignment = Alignment.TopEnd) {
             Box(
                 modifier = Modifier
+                    .graphicsLayer(scaleX = logScale, scaleY = logScale)
                     .size(38.dp)
                     .clip(CircleShape)
                     .background(SoftBlueContainer)
-                    .clickable(onClick = onLogClick),
+                    .clickable(
+                        interactionSource = logInteraction,
+                        indication = null,
+                        onClick = onLogClick
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -427,10 +533,15 @@ private fun GuardianTopBar(
         // ── Profile avatar ──────────────────────────────────────────
         Box(
             modifier = Modifier
+                .graphicsLayer(scaleX = profileScale, scaleY = profileScale)
                 .size(38.dp)
                 .clip(CircleShape)
                 .background(SoftBlueContainer)
-                .clickable(onClick = onProfileClick),
+                .clickable(
+                    interactionSource = profileInteraction,
+                    indication = null,
+                    onClick = onProfileClick
+                ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -445,13 +556,86 @@ private fun GuardianTopBar(
 
 /** Assistant avatar framed by concentric halo rings, with a verified shield badge. */
 @Composable
-private fun AssistantPortrait() {
+private fun AssistantPortrait(isActive: Boolean = false) {
+    val infiniteTransition = rememberInfiniteTransition(label = "avatar_pulse")
+    
+    val pulseScale1 by if (isActive) {
+        infiniteTransition.animateFloat(
+            initialValue = 0.86f,
+            targetValue = 1.25f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(2000, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "pulse1"
+        )
+    } else {
+        remember { mutableStateOf(0.86f) }
+    }
+    
+    val pulseAlpha1 by if (isActive) {
+        infiniteTransition.animateFloat(
+            initialValue = 0.6f,
+            targetValue = 0.0f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(2000, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "alpha1"
+        )
+    } else {
+        remember { mutableStateOf(0.0f) }
+    }
+
+    val pulseScale2 by if (isActive) {
+        infiniteTransition.animateFloat(
+            initialValue = 0.86f,
+            targetValue = 1.45f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(2800, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "pulse2"
+        )
+    } else {
+        remember { mutableStateOf(0.86f) }
+    }
+    
+    val pulseAlpha2 by if (isActive) {
+        infiniteTransition.animateFloat(
+            initialValue = 0.4f,
+            targetValue = 0.0f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(2800, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "alpha2"
+        )
+    } else {
+        remember { mutableStateOf(0.0f) }
+    }
+
     Box(
         modifier = Modifier.size(268.dp),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val center = size.minDimension / 2f
+            
+            // Draw active pulse rings
+            if (isActive) {
+                drawCircle(
+                    color = AccentBlue.copy(alpha = pulseAlpha1),
+                    radius = center * pulseScale1,
+                    style = Stroke(width = 2.dp.toPx()),
+                )
+                drawCircle(
+                    color = AccentBlue.copy(alpha = pulseAlpha2),
+                    radius = center * pulseScale2,
+                    style = Stroke(width = 1.5.dp.toPx()),
+                )
+            }
+            
             listOf(0.99f, 0.86f).forEach { fraction ->
                 drawCircle(
                     color = HaloRing,
@@ -467,7 +651,7 @@ private fun AssistantPortrait() {
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(206.dp)
-                .shadow(elevation = 14.dp, shape = CircleShape, clip = false)
+                .shadow(elevation = 16.dp, shape = CircleShape, clip = false)
                 .clip(CircleShape)
                 .background(Color.White)
                 .border(width = 5.dp, color = Color.White, shape = CircleShape),
@@ -509,112 +693,113 @@ private fun PowerButton(
     isStopping: Boolean,
     onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.94f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "power_press"
+    )
+
     val containerColor = if (isActive || isPreparing) PowerOnGreen else PowerOffGrey
-    Button(
-        onClick = onClick,
-        enabled = !isStopping && !isPreparing,
-        modifier = Modifier
-            .width(200.dp)
-            .height(56.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = Color.White,
-            // Keep the pill reading as the same control while it winds down, rather than
-            // dropping to Material's washed-out disabled surface.
-            disabledContainerColor = containerColor,
-            disabledContentColor = Color.White,
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 8.dp,
-            pressedElevation = 14.dp,
-            disabledElevation = 0.dp
-        ),
-        contentPadding = PaddingValues(start = 20.dp, end = 8.dp),
-    ) {
-        Text(
-            text = stringResource(
-                when {
-                    isPreparing -> R.string.ai_assistant_power_starting
-                    isStopping -> R.string.ai_assistant_power_stopping
-                    isActive -> R.string.ai_assistant_power_on
-                    else -> R.string.ai_assistant_power_off
-                },
-            ),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp,
-        )
-        Spacer(Modifier.weight(1f))
-        Box(
-            modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .background(Color.White),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_power),
-                // Pairs with the state label above so TalkBack announces state + action.
-                contentDescription = stringResource(
-                    if (isActive) R.string.ai_assistant_deactivate
-                    else R.string.ai_assistant_activate,
-                ),
-                tint = containerColor,
-                modifier = Modifier.size(20.dp),
+    val buttonGradient = remember(isActive, isPreparing) {
+        if (isActive || isPreparing) {
+            Brush.linearGradient(
+                colors = listOf(Color(0xFF10B981), Color(0xFF047857))
             )
+        } else {
+            Brush.linearGradient(
+                colors = listOf(Color(0xFF64748B), Color(0xFF334155))
+            )
+        }
+    }
+
+    val shadowColor = if (isActive || isPreparing) Color(0xFF10B981) else Color(0xFF64748B)
+    val shadowOpacity by animateFloatAsState(
+        targetValue = if (isActive) 0.4f else 0.2f,
+        label = "shadow_opacity"
+    )
+
+    Box(
+        modifier = Modifier
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .shadow(
+                elevation = 12.dp,
+                shape = RoundedCornerShape(28.dp),
+                ambientColor = shadowColor.copy(alpha = shadowOpacity),
+                spotColor = shadowColor.copy(alpha = shadowOpacity),
+                clip = false
+            )
+            .clip(RoundedCornerShape(28.dp))
+            .background(buttonGradient)
+            .clickable(
+                enabled = !isStopping && !isPreparing,
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .width(220.dp)
+            .height(58.dp)
+            .padding(start = 20.dp, end = 8.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = stringResource(
+                    when {
+                        isPreparing -> R.string.ai_assistant_power_starting
+                        isStopping -> R.string.ai_assistant_power_stopping
+                        isActive -> R.string.ai_assistant_power_on
+                        else -> R.string.ai_assistant_power_off
+                    },
+                ).uppercase(),
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 1.sp,
+            )
+            Spacer(Modifier.weight(1f))
+
+            val infiniteTransition = rememberInfiniteTransition(label = "power_knob")
+            val rotation by if (isPreparing || isStopping) {
+                infiniteTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 360f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1500, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart
+                    ),
+                    label = "knob_rotate"
+                )
+            } else {
+                remember { mutableStateOf(0f) }
+            }
+
+            Box(
+                modifier = Modifier
+                    .graphicsLayer(rotationZ = rotation)
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_power),
+                    contentDescription = stringResource(
+                        if (isActive) R.string.ai_assistant_deactivate
+                        else R.string.ai_assistant_activate,
+                    ),
+                    tint = containerColor,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
     }
 }
 
-@Composable
-private fun StatusTile(
-    @DrawableRes icon: Int,
-    @StringRes label: Int,
-    @StringRes value: Int,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
-            .background(CardBackground)
-            .border(width = 1.dp, color = CardBorder, shape = RoundedCornerShape(18.dp))
-            .padding(horizontal = 12.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .background(SoftBlueContainer),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                tint = AccentBlue,
-                modifier = Modifier.size(17.dp),
-            )
-        }
-        Spacer(Modifier.size(10.dp))
-        Column {
-            Text(
-                text = stringResource(label).uppercase(),
-                color = MutedText,
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 0.9.sp,
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = stringResource(value),
-                color = NavyInk,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-    }
-}
 
 @Composable
 private fun EngineStatusBadge(engineState: EngineState, errorMessage: String? = null) {
@@ -646,25 +831,43 @@ private fun EngineStatusBadge(engineState: EngineState, errorMessage: String? = 
         )
     }
 
+    val infiniteTransition = rememberInfiniteTransition(label = "badge_pulse")
+    val dotAlpha by if (engineState == EngineState.LOADING) {
+        infiniteTransition.animateFloat(
+            initialValue = 0.3f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(800, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "dot_alpha"
+        )
+    } else {
+        remember { mutableStateOf(1f) }
+    }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(statusBg)
-            .padding(horizontal = 10.dp, vertical = 4.dp)
+            .border(width = 1.dp, color = statusColor.copy(alpha = 0.15f), shape = RoundedCornerShape(16.dp))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(7.dp)
+                .graphicsLayer(alpha = dotAlpha)
+                .size(8.dp)
                 .clip(CircleShape)
                 .background(statusColor)
         )
-        Spacer(Modifier.width(6.dp))
+        Spacer(Modifier.width(8.dp))
         Text(
             text = statusText,
             color = statusColor,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.2.sp
         )
     }
 }
@@ -683,6 +886,8 @@ private fun AiAssistantActivateScreenPreview() {
             onLogClick = {},
             engineState = EngineState.READY,
             engineErrorMessage = null,
+            onEmergencyClick = {},
+            onDailyCompanionClick = {},
         )
     }
 }
@@ -701,6 +906,8 @@ private fun AiAssistantListeningPreview() {
             onLogClick = {},
             engineState = EngineState.READY,
             engineErrorMessage = null,
+            onEmergencyClick = {},
+            onDailyCompanionClick = {},
         )
     }
 }

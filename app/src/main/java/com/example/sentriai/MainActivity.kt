@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.example.sentriai.models.ModelRepository
+import com.example.sentriai.reminder.ReminderScheduler
 import com.example.sentriai.ui.navigation.SentriAiNavHost
 import com.example.sentriai.ui.screens.ModelSetupScreen
 import com.example.sentriai.ui.screens.SmsPermissionRequiredScreen
@@ -43,6 +44,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         modelsReady = ModelRepository.requiredModelsPresent(this)
+
+        // Belt and braces on top of ReminderBootReceiver. A reboot re-arms reminders on its own,
+        // but an alarm can also be lost to a force-stop or a "clear data", neither of which
+        // broadcasts anything — and opening the app is the one moment that is certain to happen
+        // afterwards. Idempotent: syncing replaces the pending alarm rather than adding one.
+        ReminderScheduler.sync(this)
+        ReminderScheduler.restoreSnoozeIfPending(this)
 
         setContent {
             SentriAITheme {

@@ -26,6 +26,40 @@
     <!-- A foreground service does not keep the CPU awake on its own once the screen is off. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!--
+      Agora RTC, for the Daily Companion voice call. MODIFY_AUDIO_SETTINGS lets the SDK switch
+      the device into communication mode (echo cancellation, earpiece/speaker routing);
+      ACCESS_WIFI_STATE is what it uses to pick an initial bitrate. Both are normal-protection
+      permissions — no runtime prompt. RECORD_AUDIO and INTERNET are already declared above.
+    -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!--
+      Medicine and meal reminders. Four permissions, each covering one link of the chain
+      alarm → receiver → foreground service → overlay window:
+
+      SYSTEM_ALERT_WINDOW draws the reminder over whatever app is in front. It is not granted by
+      a runtime prompt — the user has to turn it on in Settings, which ReminderPermissions opens.
+
+      SCHEDULE_EXACT_ALARM, rather than USE_EXACT_ALARM: the latter is auto-granted but Play
+      restricts it to apps whose primary function is alarms or calendars. This one costs a trip to
+      the "Alarms & reminders" screen and is the defensible declaration for a care app. Without an
+      exact alarm a dose reminder arrives whenever the platform finds convenient.
+
+      RECEIVE_BOOT_COMPLETED re-arms the alarms the OS drops on restart.
+
+      FOREGROUND_SERVICE_SPECIAL_USE is required from API 34 for the service type below.
+      POST_NOTIFICATIONS, FOREGROUND_SERVICE and WAKE_LOCK are already declared above.
+    -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
+
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -53,6 +87,57 @@
             android:name=".service.ListeningService"
             android:exported="false"
             android:foregroundServiceType="microphone" />
+
+        <!--
+          Draws the reminder overlay. No platform foreground service type describes "shows a
+          reminder over other apps", and from API 34 a type is mandatory, so specialUse it is —
+          with the subtype property the platform requires alongside it.
+
+          Started only from ReminderAlarmReceiver. That matters on API 31+, where background
+          foreground-service starts are blocked: delivering an exact alarm puts the app on a short
+          temporary allowlist, and that is the window this start happens inside.
+        -->
+        <service
+            android:name=".reminder.ReminderOverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Shows medicine and meal reminders as an overlay at their scheduled time." />
+        </service>
+
+        <activity
+            android:name=".reminder.ReminderActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SentriAI.Transparent"
+            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:launchMode="singleInstance"
+            android:excludeFromRecents="true" />
+
+
+
+        <!-- The alarm lands here. Not exported: nothing outside the app may fire a reminder. -->
+        <receiver
+            android:name=".reminder.ReminderAlarmReceiver"
+            android:exported="false" />
+
+        <!--
+          Re-arms reminders after the events that clear pending alarms or move the clock.
+          BOOT_COMPLETED is only delivered to a manifest-declared receiver, which is why this one
+          is separate from the alarm receiver above.
+        -->
+        <receiver
+            android:name=".reminder.ReminderBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 
