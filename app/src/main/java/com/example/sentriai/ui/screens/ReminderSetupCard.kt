@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -31,11 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.border
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -69,7 +63,6 @@ internal fun ReminderSetupCard(
     status: ReminderStatus,
     onEnabledChange: (Boolean) -> Unit,
     onRefresh: () -> Unit,
-    onPreview: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -160,59 +153,6 @@ internal fun ReminderSetupCard(
         }
 
         if (!status.loaded) return@Column
-
-        if (status.enabled) {
-            val previewInteraction = remember { MutableInteractionSource() }
-            val previewPressed by previewInteraction.collectIsPressedAsState()
-            val previewScale by animateFloatAsState(if (previewPressed) 0.93f else 1f, label = "preview_press")
-
-            Spacer(Modifier.height(12.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .graphicsLayer(scaleX = previewScale, scaleY = previewScale)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(SoftBlueContainer)
-                    .clickable(
-                        interactionSource = previewInteraction,
-                        indication = null,
-                        onClick = {
-                            if (status.notificationPermissionExists && !status.hasNotificationPermission) {
-                                notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else if (!status.canDrawOverlay) {
-                                context.startSafely(ReminderPermissions.overlaySettingsIntent(context))
-                            } else if (status.exactAlarmSettingExists && !status.canScheduleExactAlarms) {
-                                ReminderPermissions.exactAlarmSettingsIntent(context)
-                                    ?.let { context.startSafely(it) }
-                            } else {
-                                onPreview()
-                            }
-                        }
-                    )
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.PlayArrow,
-                    contentDescription = null,
-                    tint = AccentBlue,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.reminder_preview),
-                    color = AccentBlue,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = stringResource(R.string.reminder_preview_detail),
-                color = MutedText,
-                fontSize = 12.sp,
-                lineHeight = 17.sp,
-            )
-        }
     }
 }
 

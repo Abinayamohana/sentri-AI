@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 enum class EngineState {
     LOADING,
 
-    /** Classifier and tool-call models both loaded. */
+    /** Classifier model loaded. */
     READY,
 
     /** Classifier LLM absent — only the safe word can raise an alert. */
@@ -27,7 +27,7 @@ enum class EngineState {
 }
 
 /**
- * ViewModel exposing trigger log entries and managing FunctionGemma engine state.
+ * ViewModel exposing trigger log entries and managing emergency pipeline engine state.
  */
 class TriggerLogViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -49,7 +49,7 @@ class TriggerLogViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     /**
-     * Loads the detection and tool-call models asynchronously.
+     * Loads the detection model asynchronously.
      *
      * A missing classifier is reported as DEGRADED rather than UNAVAILABLE: the phrase trigger
      * still works, so the user can still summon help deliberately.
@@ -78,7 +78,7 @@ class TriggerLogViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     /**
-     * Processes a transcript through the FunctionGemma emergency pipeline.
+     * Processes a transcript through the emergency pipeline.
      */
     fun processTranscript(transcript: String, onComplete: (Boolean) -> Unit = {}) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -97,7 +97,7 @@ class TriggerLogViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    // Deliberately no onCleared teardown: FunctionGemmaEngine is a process-global object
+     // Deliberately no onCleared teardown: EmergencyPipeline is a process-global object
     // that ListeningService also uses, and listening outlives this ViewModel. Closing it
     // here used to pull the engine out from under a background session, leaving the
     // emergency check silently dead while the mic was still running.

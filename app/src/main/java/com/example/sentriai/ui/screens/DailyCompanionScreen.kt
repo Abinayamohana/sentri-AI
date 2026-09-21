@@ -196,7 +196,6 @@ fun DailyCompanionScreen(
                 status = reminderStatus,
                 onEnabledChange = viewModel::setRemindersEnabled,
                 onRefresh = viewModel::refreshReminderStatus,
-                onPreview = viewModel::previewReminder,
             )
 
             Spacer(Modifier.height(20.dp))

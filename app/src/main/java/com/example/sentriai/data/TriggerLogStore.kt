@@ -12,7 +12,7 @@ import java.io.File
  * Thread-safe: every public function synchronises on [LOCK] before touching
  * the file.
  *
- * **Integration point for FunctionGemma + SMS:**
+ * **Integration point for Emergency Pipeline + SMS:**
  * Call [logEvent] at the point where the SMS send attempt completes —
  * pass in whether it succeeded and any failure reason.
  */
@@ -24,11 +24,11 @@ object TriggerLogStore {
     /**
      * Append a new trigger event to the log.
      *
-     * This is the **single call-site** that the future FunctionGemma / SMS
-     * sender should invoke once an SMS delivery attempt finishes.
+     * This is the **single call-site** that the SMS sender should invoke once
+     * an SMS delivery attempt finishes.
      *
      * ```
-     * // TODO: Wire from FunctionGemma + SMS sender
+     * // Wire from SMS sender
      * TriggerLogStore.logEvent(
      *     context       = appContext,
      *     triggerPhrase  = "Help, I've fallen",

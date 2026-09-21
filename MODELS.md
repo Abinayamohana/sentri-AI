@@ -1,6 +1,6 @@
 # Model files
 
-Whisper ships in the APK. The two Gemma models download at runtime.
+Whisper ships in the APK. The Gemma classifier model downloads at runtime.
 
 Everything runs on device once present. The network is used only for that model download; no
 audio or transcript ever leaves the phone.
@@ -11,14 +11,13 @@ audio or transcript ever leaves the phone.
 | `whisper_preprocessor.pte` | log-mel spectrogram front-end | 77 KiB | bundled in `assets/` |
 | `tokenizer.json` | Whisper vocab + BPE rules | 2.3 MiB | bundled in `assets/` |
 | `gemma3-1b-it-q4.task` | decides whether an utterance is an emergency | 529 MiB | Hugging Face (gated) |
-| `functiongemma-270m-it.task` | formats a decided emergency as a tool call | 271 MiB | you host it |
 
 `ModelStore` treats a bundled file and a downloaded one identically, so moving a model between
 `assets/` and a URL needs no code change beyond its catalog entry.
 
-The two Gemma models are optional: without them detection falls back to the safe-word trigger
+The Gemma classifier model is optional: without it detection falls back to the safe-word trigger
 and the keyword scan, and the status badge reads *"Keyword detection only — classifier
-absent"*. See `engine/EmergencyPipeline.kt` for how the two detection stages fit together.
+absient"*. See `engine/EmergencyPipeline.kt` for how the detection stages fit together.
 
 ## Why Whisper is bundled
 
@@ -34,16 +33,12 @@ No public repo has a drop-in `whisper-tiny.en` ExecuTorch export:
 
 So these are local `optimum-cli` exports, and bundling is the only route that needs no hosting.
 
-## Where the Gemma models come from
+## Where the Gemma model comes from
 
 - **`gemma3-1b-it-q4.task`** — `litert-community/Gemma3-1B-IT`, which is gated (`gated: auto`:
   licence acceptance plus a token). Anonymous requests get `401 GatedRepo`. The hub filename is
   `Gemma3-1B-IT_multi-prefill-seq_q4_ekv2048.task`; the catalog maps it to the shorter local
   name. Use the in-app button below, or host a copy yourself.
-- **`functiongemma-270m-it.task`** — `google/functiongemma-270m-it` is gated *and* publishes no
-  `.task`, only `tiny_garden.litertlm`. The `litert-community` fine-tunes are also `.litertlm`.
-  This bundle was converted locally, so it has no public URL at all: either put it in `assets/`,
-  set `hfModelRepo` to a repo of your own holding it, or go without.
 
 ## Configuration
 
@@ -110,7 +105,7 @@ entirely: `HF_TOKEN` is declared empty in `defaultConfig` and only overridden in
 build type, and the composable returns immediately unless `BuildConfig.DEBUG`.
 
 This is a testing convenience, not the production path. It only offers models with an `hfRepo`
-in `ModelCatalog`: the classifier always, and the alert formatter once you set `hfModelRepo`.
+in `ModelCatalog`: currently only the classifier model.
 The Whisper files are never offered — they are bundled, and no hub copy matches this app's
 export.
 

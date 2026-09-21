@@ -167,11 +167,11 @@ class ListeningService : Service() {
             return
         }
 
-        // FunctionGemma is a process-global object that the UI normally warms up. In a
-        // background session there may be no UI, so make sure it is ready here too;
+        // The emergency pipeline is a process-global object that the UI normally warms up.
+        // In a background session there may be no UI, so make sure it is ready here too;
         // initialize() is a no-op once loaded.
         runCatching { EmergencyPipeline.initialize(this) }
-            .onFailure { Log.e(TAG, "FunctionGemma init failed", it) }
+            .onFailure { Log.e(TAG, "Emergency pipeline init failed", it) }
 
         // Loading can take long enough for a stop to arrive first; don't announce a live
         // stream we are about to wind down.

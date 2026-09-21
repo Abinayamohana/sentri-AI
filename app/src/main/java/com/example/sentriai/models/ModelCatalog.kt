@@ -106,30 +106,11 @@ object ModelCatalog {
         hfFile = "Gemma3-1B-IT_multi-prefill-seq_q4_ekv2048.task",
     )
 
-    /**
-     * Formats an already-decided emergency as a tool call.
-     *
-     * `google/functiongemma-270m-it` publishes no `.task`, so this bundle was converted locally
-     * and has no public URL. Set `hfModelRepo` to a repo of your own holding it and the app can
-     * fetch it; otherwise put it in `assets/` or leave it out — detection still works, it just
-     * dispatches straight from the detector's decision.
-     */
-    val FUNCTION_GEMMA = ModelAsset(
-        fileName = "functiongemma-270m-it.task",
-        displayName = "Alert formatter",
-        sizeBytes = 284_368_375L,
-        sha256 = "1312345025986225edf8a9d3dfc49a2d7dc41dcf6a4420da5f348eff9d0f185a",
-        required = false,
-        hfRepo = BuildConfig.HF_MODEL_REPO.ifBlank { null },
-        hfFile = "functiongemma-270m-it.task",
-    )
-
     val all: List<ModelAsset> = listOf(
         WHISPER_PREPROCESSOR,
         WHISPER_TOKENIZER,
         WHISPER_MODEL,
         CLASSIFIER,
-        FUNCTION_GEMMA,
     )
 
     val required: List<ModelAsset> = all.filter { it.required }

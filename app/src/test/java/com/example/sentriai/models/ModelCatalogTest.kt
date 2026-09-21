@@ -43,7 +43,6 @@ class ModelCatalogTest {
         assertTrue(ModelCatalog.WHISPER_TOKENIZER.required)
         // Detection degrades to keywords without these rather than stopping.
         assertTrue(!ModelCatalog.CLASSIFIER.required)
-        assertTrue(!ModelCatalog.FUNCTION_GEMMA.required)
     }
 
     @Test

@@ -71,7 +71,7 @@ private val EmergencyAmber = Color(0xFFD97706)
  * and the Whisper model has finished loading.
  *
  * Purely a view: transcription and the emergency analysis both run in `ListeningService`
- * and are observed here. That is deliberate — this screen used to run the FunctionGemma
+ * and are observed here. That is deliberate — this screen used to run the emergency
  * check, send the SMS and write the trigger log from a `LaunchedEffect`, which meant
  * nothing was detected once the UI went away. Stopping here winds the service down; the
  * back button leaves it running so the assistant stays armed until it is powered off.

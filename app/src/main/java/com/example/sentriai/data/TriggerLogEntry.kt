@@ -17,9 +17,9 @@ data class TriggerLogEntry(
     val triggerPhrase: String,
     /** Category of emergency: "Fall", "Medical Distress", "Help Call", etc. */
     val emergencyType: String,
-    /** Full Whisper transcript that provided context to FunctionGemma. */
+    /** Full Whisper transcript that was evaluated. */
     val fullTranscript: String,
-    /** FunctionGemma confidence score, 0.0–1.0. */
+    /** Detection confidence score, 0.0–1.0. */
     val confidenceScore: Float,
     /** Whether the SMS alert was delivered successfully. */
     val smsSuccess: Boolean,

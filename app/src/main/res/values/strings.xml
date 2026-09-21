@@ -213,8 +213,6 @@
     <string name="reminder_permission_notifications_detail">Where a reminder goes when the screen is locked.</string>
     <string name="reminder_permission_granted">Allowed</string>
     <string name="reminder_permission_grant">Allow</string>
-    <string name="reminder_preview">Try it now</string>
-    <string name="reminder_preview_detail">Shows your next reminder straight away, the way it will really appear. Changes nothing.</string>
     <string name="reminder_battery_hint">Reminders not arriving? Some phones stop background apps on their own. Allowing background activity for Sentri AI fixes it.</string>
     <string name="reminder_battery_action">Open battery settings</string>
 </resources>

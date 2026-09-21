@@ -96,7 +96,7 @@ object ModelRepository {
      * Hugging Face is tried first when the catalog knows a repo for the file, because that
      * needs no hosting of your own — `tokenizer.json` comes straight from `openai/whisper-tiny.en`
      * with no token at all. Configured storage is the fallback, which is the only route for the
-     * files that exist nowhere public: the Whisper `.pte` exports and the FunctionGemma bundle.
+     * files that exist nowhere public: the Whisper `.pte` exports.
      */
     private suspend fun downloadFromBestSource(
         context: Context,
